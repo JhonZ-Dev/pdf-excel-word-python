@@ -4,9 +4,7 @@ from copy import copy
 
 def save_merges(ws):
     merges = []
-    print("\n--- Lista de merges después de restaurar ---")
     for cr in ws.merged_cells.ranges:
-        print(str(cr))
         merges.append({
             'min_row': cr.min_row,
             'max_row': cr.max_row,
@@ -16,10 +14,6 @@ def save_merges(ws):
     return merges
 
 def restore_merges(ws, merges, insert_at, n_rows, item_start_row, new_total_row, max_col):
-    """
-    Restaura merges, ajustando filas si el merge está después de insert_at.
-    Evita merges que toquen cualquier fila de la tabla de items y total.
-    """
     for m in merges:
         min_row = m['min_row']
         max_row = m['max_row']
@@ -29,17 +23,17 @@ def restore_merges(ws, merges, insert_at, n_rows, item_start_row, new_total_row,
         if min_row >= insert_at:
             min_row += n_rows
             max_row += n_rows
-        # NO recrees el merge en la fila de TOTAL original (solo lo ponemos en la nueva fila TOTAL después)
+        # NO recrees el merge en la fila de TOTAL original
         if insert_at <= m['min_row'] <= m['max_row'] <= insert_at:
             continue
-        # 🚨 SKIP merges que toquen cualquier parte de la tabla de items o la fila total (A14:G[new_total_row])
+        # SKIP merges que caen sobre items o total
         if (
-            max_row >= item_start_row and   # Toca o pasa sobre inicio de items
-            min_row <= new_total_row and    # Toca o pasa sobre fin de items
+            max_row >= item_start_row and   
+            min_row <= new_total_row and    
             min_col <= max_col and
             max_col_merge >= 1
         ):
-            continue  # ¡Este merge toca la tabla de items, lo saltamos!
+            continue
         try:
             ws.merge_cells(
                 start_row=min_row, start_column=min_col,
@@ -48,8 +42,7 @@ def restore_merges(ws, merges, insert_at, n_rows, item_start_row, new_total_row,
         except:
             pass
 
-
-
+# === LÓGICA PRINCIPAL ===
 with open('datos.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
@@ -75,25 +68,21 @@ item_start_row = 14
 total_row_original = 15
 max_col = 7
 
-# 1. Guarda todos los merges originales (con coordenadas, NO como string)
 merges_orig = save_merges(ws)
-
-# 2. Insertar filas antes de TOTAL (si hay más de 2 items)
 rows_to_insert = max(0, n_items - 2)
 if rows_to_insert:
     ws.insert_rows(total_row_original, rows_to_insert)
 
 new_total_row = item_start_row + n_items
 
-# 3. Elimina TODOS los merges (temporalmente)
+# Quitar todos los merges
 for rng in list(ws.merged_cells.ranges):
     try:
         ws.unmerge_cells(str(rng))
     except:
         pass
 
-# 4. Restaura merges desplazando los que están después de la fila TOTAL original
-#restore_merges(ws, merges_orig, insert_at=total_row_original, n_rows=rows_to_insert)
+# Restaurar merges excepto los que pisan la tabla
 restore_merges(
     ws, merges_orig,
     insert_at=total_row_original,
@@ -102,6 +91,8 @@ restore_merges(
     new_total_row=new_total_row,
     max_col=max_col
 )
+
+# Descombina merges residuales en la zona de items (copia de la lista)
 to_unmerge = []
 for cr in list(ws.merged_cells.ranges):
     if (
@@ -111,13 +102,13 @@ for cr in list(ws.merged_cells.ranges):
         cr.min_col <= max_col
     ):
         to_unmerge.append(str(cr))
-
 for ref in to_unmerge:
     try:
         ws.unmerge_cells(ref)
     except:
         pass
-# 5. Copia formato SOLO de la fila 14 original para nuevas filas de items
+
+# --- COPIAR FORMATO de la fila 14 original para nuevas filas antes del reload ---
 for i in range(n_items):
     src_row = item_start_row
     dst_row = item_start_row + i
@@ -132,47 +123,57 @@ for i in range(n_items):
                 dst_cell.font = copy(src_cell.font)
                 dst_cell.border = copy(src_cell.border)
                 dst_cell.fill = copy(src_cell.fill)
+
+# --- GUARDAR y REABRIR para limpiar referencias internas de merges ---
+tmp_path = "proforma_temp.xlsx"
+wb.save(tmp_path)
+wb2 = openpyxl.load_workbook(tmp_path)
+ws2 = wb2.active
+
+# === DEBUG: Ya debe ser todo False ===
 for idx in range(n_items):
     row = item_start_row + idx
-    print(f"Fila {row} columna D es MergedCell? ", isinstance(ws.cell(row=row, column=4), openpyxl.cell.cell.MergedCell))
+    print(f"Fila {row} columna D es MergedCell? ", isinstance(ws2.cell(row=row, column=4), openpyxl.cell.cell.MergedCell))
 
-# 6. Escribe los items solo si la celda NO es MergedCell
+# --- LLENAR DATOS de los items y el total ---
 for idx, item in enumerate(data['items']):
     row = item_start_row + idx
-    if not isinstance(ws.cell(row=row, column=1), openpyxl.cell.cell.MergedCell):
-        ws[f'A{row}'] = idx + 1
-    if not isinstance(ws.cell(row=row, column=2), openpyxl.cell.cell.MergedCell):
-        ws[f'B{row}'] = item['txt_cpc']
-    if not isinstance(ws.cell(row=row, column=3), openpyxl.cell.cell.MergedCell):
-        ws[f'C{row}'] = item['txt_unidad']
-    if not isinstance(ws.cell(row=row, column=4), openpyxl.cell.cell.MergedCell):
-        ws[f'D{row}'] = item['txt_especificaciones']
-    if not isinstance(ws.cell(row=row, column=5), openpyxl.cell.cell.MergedCell):
-        ws[f'E{row}'] = item['int_cantidad']
-    if not isinstance(ws.cell(row=row, column=6), openpyxl.cell.cell.MergedCell):
-        ws[f'F{row}'] = item['flo_precioUnitario']
-    if not isinstance(ws.cell(row=row, column=7), openpyxl.cell.cell.MergedCell):
-        ws[f'G{row}'] = item['flo_precioTotal']
+    ws2[f'A{row}'] = idx + 1
+    ws2[f'B{row}'] = item['txt_cpc']
+    ws2[f'C{row}'] = item['txt_unidad']
+    ws2[f'D{row}'] = item['txt_especificaciones']
+    ws2[f'E{row}'] = item['int_cantidad']
+    ws2[f'F{row}'] = item['flo_precioUnitario']
+    ws2[f'G{row}'] = item['flo_precioTotal']
 
-# 7. Vuelve a combinar la fila TOTAL en la nueva ubicación (A[new_total_row]:F[new_total_row])
-ws.merge_cells(start_row=new_total_row, start_column=1, end_row=new_total_row, end_column=6)
-
-# Escribir el texto y el total en la fila TOTAL
-if not isinstance(ws.cell(row=new_total_row, column=1), openpyxl.cell.cell.MergedCell):
-    ws[f'A{new_total_row}'] = "TOTAL"
-if not isinstance(ws.cell(row=new_total_row, column=7), openpyxl.cell.cell.MergedCell):
-    ws[f'G{new_total_row}'] = sum(float(item['flo_precioTotal']) for item in data['items'])
+# --- MERGE de TOTAL ---
+ws2.merge_cells(start_row=new_total_row, start_column=1, end_row=new_total_row, end_column=6)
+ws2[f'A{new_total_row}'] = "TOTAL"
+ws2[f'G{new_total_row}'] = sum(float(item['flo_precioTotal']) for item in data['items'])
 
 # Copiar formato de TOTAL original a la nueva fila TOTAL (opcional)
 for col in range(1, max_col+1):
-    src_cell = ws.cell(row=total_row_original, column=col)
-    dst_cell = ws.cell(row=new_total_row, column=col)
-    if not isinstance(dst_cell, openpyxl.cell.cell.MergedCell):
-        dst_cell._style = copy(src_cell._style)
-        dst_cell.number_format = src_cell.number_format
-        dst_cell.alignment = copy(src_cell.alignment)
-        dst_cell.font = copy(src_cell.font)
-        dst_cell.border = copy(src_cell.border)
-        dst_cell.fill = copy(src_cell.fill)
+    src_cell = ws2.cell(row=total_row_original, column=col)
+    dst_cell = ws2.cell(row=new_total_row, column=col)
+    dst_cell._style = copy(src_cell._style)
+    dst_cell.number_format = src_cell.number_format
+    dst_cell.alignment = copy(src_cell.alignment)
+    dst_cell.font = copy(src_cell.font)
+    dst_cell.border = copy(src_cell.border)
+    dst_cell.fill = copy(src_cell.fill)
+# === Llenar los campos finales debajo del TOTAL ===
+# === Llenar los campos finales debajo del TOTAL ===
+campos_finales = {
+    "txt_plazoEntrega":      "D20",
+    "txt_vigenciaOferta":    "D21",
+    "txt_garantia":          "D22",
+    "txt_formaPago":         "D23",
+    "txt_metodologiaTrabajo":"D24",
+    "txt_enlace":            "D25",
+}
+for k, cell in campos_finales.items():
+    ws2[cell] = data.get(k, "")
 
-wb.save('proforma_final.xlsx')
+# Guardar final
+ws2.parent.save('proforma_final.xlsx')
+print("Archivo generado correctamente como 'proforma_final.xlsx'")
