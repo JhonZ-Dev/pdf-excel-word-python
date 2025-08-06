@@ -1,0 +1,81 @@
+{
+  "txt_cliente": "FISCALIA DE BOLIVAR",
+  "txt_ruc": "0260018030001",
+  "txt_direccion": " AV. CANDIDO RADA Y SALIN",
+  "txt_fecha": "2025-08-04",
+  "txt_telefono": "SN",
+  "txt_necesidad": "NIC-0260018030001-2025-00037",
+  "txt_funcionario": "ING. MARIA ISABEL GUTIERREZ",
+  "txt_correo": "gutierrezm@fiscalia.gob.ec",
+  "tHora_maxina": "2025-08-07T13:13",
+  "txt_objetivoCompra": "ADQUISICION SUMINISTROS DE OFICINA PARA STOCK BODEGA DE LA FISCALIA DE BOLIVAR",
+  "txt_plazoEntrega": "10 DÍAS",
+  "txt_vigenciaOferta": "60 DÍAS",
+  "txt_garantia": "12 MESES",
+  "txt_formaPago": "CONTRA ENTREGA TOTAL DE LOS BIENES",
+  "txt_metodologiaTrabajo": "NOS ADHERIMOS A LA METODOLOGIA ESTABLECIDA POR LA ENTIDAD",
+  "txt_enlace": "https://www.compraspublicas.gob.ec/ProcesoContratacion/compras/NCO/NCORegistroDetalle.cpe?&id=LJ_WiUl-CoOPX2sUxQlOJ9qAcYSfLnMYDvihWxcoDEg,&op=0",
+  "txt_infimaNro": "04-08-0000000008",
+  "estado_id": 3,
+  "dFechaRegistro": "2025-08-04",
+  "tTimeHora": "13:16:54",
+  "proforma_id": 9,
+  "estado_name": "ACEPTADA",
+  "items": [
+    {
+      "txt_cpc": "321491311\t",
+      "txt_unidad": "UNIDAD",
+      "txt_especificaciones": "LAMINAS CONTAC FLUORESCENTE A4 AMARILLA",
+      "int_cantidad": 150,
+      "flo_precioUnitario": 0.9,
+      "flo_precioTotal": 135,
+      "flo_total": 135,
+      "items_id": 12,
+      "proforma_id": 9
+    },
+    {
+      "txt_cpc": "321491311",
+      "txt_unidad": "UNIDAD",
+      "txt_especificaciones": "LAMINAS CONTAC FLUORESCENTE A4 VERDE",
+      "int_cantidad": 150,
+      "flo_precioUnitario": 0.9,
+      "flo_precioTotal": 135,
+      "flo_total": 135,
+      "items_id": 13,
+      "proforma_id": 9
+    },
+    {
+      "txt_cpc": "321491311",
+      "txt_unidad": "UNIDAD",
+      "txt_especificaciones": "LAMINAS CONTACT A4 ADHESIVAS TRANSPARENTES BLANCA",
+      "int_cantidad": 200,
+      "flo_precioUnitario": 0.6,
+      "flo_precioTotal": 120,
+      "flo_total": 120,
+      "items_id": 14,
+      "proforma_id": 9
+    },
+    {
+      "txt_cpc": "321491311",
+      "txt_unidad": "UNIDAD",
+      "txt_especificaciones": "LAMINAS CONTAC FLUORESCENTE A4 FUCSIA",
+      "int_cantidad": 150,
+      "flo_precioUnitario": 0.9,
+      "flo_precioTotal": 135,
+      "flo_total": 135,
+      "items_id": 15,
+      "proforma_id": 9
+    },
+    {
+      "txt_cpc": "321491311",
+      "txt_unidad": "UNIDAD",
+      "txt_especificaciones": "LAMINAS CONTAC FLUORESCENTE A4 NARANJA",
+      "int_cantidad": 150,
+      "flo_precioUnitario": 0.9,
+      "flo_precioTotal": 135,
+      "flo_total": 135,
+      "items_id": 16,
+      "proforma_id": 9
+    }
+  ]
+}
